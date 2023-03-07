@@ -25,7 +25,7 @@
 </head>
 <body>
     <div class="redirect">
-        <input type="button" class="btn btn-primary" onclick="window.location.href='logout.php';" value="Logout User">  
+        <input type="button" class="btn btn-primary" onclick=logout() value="Logout User">  
     </div>
     <br/>
     <div class="user container">
@@ -187,22 +187,12 @@
 }
 </script>
 
-<!-- <script>
-$(".toggle").click(function(e){
-    e.preventDefault();
-    $(this).toggleClass("expand");
-    var className = 'toggle';
-    var $current= $(this).closest('th').next();
-    while($current.hasClass(className)){
-        if($(this).hasClass("expand")){
-           $current.show();
-           $current = $current.next().next();
-        }
-        else{
-           $current.hide();
-           $current = $current.next();
-        }
-
-    }
-});
-</script> -->
+<!-- JS script to promp user, in order to confirm logout -->
+<script>
+function logout() {
+  const response = confirm("Are you sure you want to do logout?");
+  if (response) {
+    window.location.href='logout.php';
+  }  
+}
+</script>
