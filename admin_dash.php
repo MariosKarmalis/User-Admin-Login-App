@@ -26,7 +26,7 @@
 </head>
 <body>
     <div class="redirect">
-        <input type="button" class="btn btn-primary" onclick="window.location.href='logoutA.php';" value="Logout Admin">  
+        <input type="button" class="btn btn-primary" onclick=logout() value="Logout Admin">  
     </div>
     <br/>
     <div class="admin container">
@@ -207,6 +207,17 @@
   window.history.replaceState( null, null, window.location.href);
 }
 </script>
+
+<!-- JS script to promp user, in order to confirm logout -->
+<script>
+function logout() {
+  const response = confirm("Are you sure you want to do logout?");
+  if (response) {
+    window.location.href='logoutA.php';
+  }  
+}
+</script>
+
 <!-- JS Handler for collapse functionality of user management board -->
 <script>
   $('.accordian-body').on('show.bs.collapse', function () {
