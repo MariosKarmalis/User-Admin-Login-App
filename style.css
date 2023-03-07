@@ -1,0 +1,118 @@
+/* Redirect div container for user & admin login pages. */
+.redirect{
+    right: 0;
+    position: fixed;
+    margin: auto; 
+    width: fit-content;
+}
+
+.reg.btn.btn-info{
+    position: absolute;
+    right: 3%;
+    bottom: 2%;
+    margin: auto; 
+    width: fit-content;
+}
+
+.reg-form{
+    position: relative;
+    margin: auto; 
+    width: 50%;
+    border: 2px solid rgb(117, 117, 117);
+    padding: 10px;
+} 
+
+.user-login-btn{
+    position: absolute;
+    right: 3%;
+    margin: auto; 
+    width: fit-content;
+}
+
+.user_log {
+    position: relative;
+    margin: auto; 
+    width: 50%;
+    border: 2px solid rgb(117, 117, 117);
+    padding: 10px;
+}
+
+.admin_log{
+    position: relative;
+    margin: auto; 
+    width: 50%;
+    border: 2px solid rgb(117, 117, 117);
+    padding: 10px;
+}
+
+.admin-log-btn{
+    position: absolute;
+    right: 3%;
+    bottom: 5%;
+    margin: auto; 
+    width: fit-content;
+}
+
+/* List margin for user dashboard tab pills  */
+li{
+    margin: 1.6em;
+}
+/* User Dashboard div container for user app functionalities */
+.user.container{
+    position: relative;
+    width: 50%;
+    margin: auto;
+    padding: 10px;
+}
+
+.admin.container{
+    position: relative;
+    width: 50%;
+    margin: auto;
+    padding: 10px;
+}
+/* Update Button for user dashboard css */
+.update.btn.btn-info{
+    position: absolute;
+    margin-top: 2%;
+    right: 30px;
+}
+/* Update Button for user dashboard css */
+.send.btn.btn-info{
+    position: absolute;
+    margin-top: 2%;
+    right: 2%;
+}
+
+/* Lost password php file. Container div */
+.lost-pass.container{
+    margin-top: 10%;
+    width: 50%;
+    position: relative;
+}
+/* Lost password function button styling */
+.lost-pass.btn{
+    position: absolute;
+    right: 3%;
+    margin: auto; 
+    width: fit-content;
+}
+/* Alignment of time submitted message in user messages form */
+.time_submit{
+    position: absolute;
+    right:2%;
+    font-size:80%;
+}
+/* Setting table row  display of user message board */
+.toggle{
+    display: none;
+}
+
+.table.row {
+    color: #000000;
+    background: #dfdfdf;
+    padding: 10px 15px;
+    border-radius: 3px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+
