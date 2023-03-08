@@ -1,6 +1,7 @@
 <?php 
   session_start();  
-
+  // Include config file
+  require_once "config.php";
   if(!isset($_SESSION["email"])) 
   {  
     session_destroy();
@@ -19,7 +20,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script> 
   <link rel="stylesheet" type="text/css" href="style.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <!-- Imported BS 4.6.2 JS because BS 5.3 had issues with modal.js in tab-content section -->
   
   <title>Admin dashboard</title>
@@ -35,7 +35,7 @@
           <a class="nav-link active" data-toggle="pill" href="#Prof" role="tab">My Profile</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" id="customers" data-toggle="pill" href="#Customers" role="tab" onclick="set_var()">My Customers</a>
+          <a class="nav-link" id="customers" data-toggle="pill" href="#Customers" role="tab">My Customers</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" data-toggle="pill" href="#Messages" role="tab">Message Board</a>
@@ -48,7 +48,8 @@
             <label>Username</label>  
             <input type="text" name="username" class="form-control" />  
             <br />  
-            <label>Email: <?php echo "<b> $_SESSION[email] </b> "; ?> </label>
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" />  
 				    <br />
             <label>Password</label>  
             <input type="password" name="password" class="form-control" />  
@@ -63,9 +64,9 @@
               $ucl = preg_match('/[a-zA-Z]/', $_POST["password"]); // Uppercase Letter
               $dig = preg_match('/\d/', $_POST["password"]); // Numeral
               $nos = preg_match('/[^a-zA-Z\d]/', $_POST["password"]); // Non-alpha/num characters
-              if( empty($_POST["password"]) || empty($_POST["username"]) )  
+              if(empty($_POST["email"]) || empty($_POST["password"]) || empty($_POST["username"]) )  
               {  
-                    echo '<script>alert("All Fields are required")</script>';  
+                echo '<script>alert("All Fields are required")</script>';  
               }  
               else if( strlen($_POST["password"])< 8 )
               {  
@@ -73,18 +74,18 @@
               }
               else if (!($ucl && $dig && $nos))
               {
-                  echo '<script>alert("Please enter a password with at least one Capital letter, 1 number and 1 special character")</script>';
+                echo '<script>alert("Please enter a password with at least one Capital letter, 1 number and 1 special character")</script>';
               }
               else
               {
                 $username = mysqli_real_escape_string($connect, $_POST["username"]);  
                 $password = mysqli_real_escape_string($connect, $_POST["password"]); 
-                // $email = mysqli_real_escape_string($connect, $_POST["email"]);
+                $email = mysqli_real_escape_string($connect, $_POST["email"]);
                 // $password = md5($password);  
-                $query = "UPDATE  admins  SET username='$username', password='$password' WHERE email = '$_SESSION[email]' ";  
+                $query = "UPDATE  admins  SET username='$username', password='$password', email='$email' WHERE email = '$_SESSION[email]' ";  
                 if(mysqli_query($connect, $query))  
                 {  
-                    echo '<script> alert("Changes were made succesfully!!") </script>';
+                  echo '<script> alert("Changes were made succesfully!!") </script>';
                 }
                 else
                 {
@@ -95,33 +96,47 @@
           ?>  
         </div>
         <div class="tab-pane container fade" id="Customers">
-          <?php
-            
-            $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
-            // $cust_list = mysqli_real_escape_string($connect,$_POST["message"]);
-            $cust_query = "SELECT * FROM users";
-            $cust_list = mysqli_query($connect,$cust_query); 
-            $time_stamp = "SELECT time_ref FROM  user_messages";
-            $time_result = mysqli_query($connect,$time_stamp);  
-          ?>
-          <div class="table-wrapper ">
+          <div class="table-wrapper">
             <!-- Mysqli prepared statement for recursive fetch of rows of table "users" from database -->
             <?php 
+              $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
+              $cust_query = "SELECT * FROM users";
+              $cust_list = mysqli_query($connect,$cust_query); 
+              $time_stamp = "SELECT time_ref FROM  user_messages";
+              $time_list = mysqli_query($connect,$time_stamp);  
               while($customers =  $cust_list->fetch_assoc())
               { 
                 // Creating array from mysqli fetch in order to be able to utilize array data accordingly.
                 $users[] = $customers;
-                // $last_msg[] = $submit_time;
               }
-            ?>
-            <?php 
-              for ($x = 0; $x <= count($users)-1; $x++) 
+              // Check for null/undeclared value of above $users array to prevent variable from being undefined.
+              if (!isset($users)){
+                echo '<h4> You haven\'t got any customers yet. </h4>';
+              }
+              else
               {
+              // Mysqli prepared statement for recursive fetch of rows of table "user_messages" from database.
+                for ($x = 0; $x <= count($users)-1; $x++)
+                {
             ?>
-            <table class="customer  table-responsive">
+            <table class="customer table-responsive">
               <!--  Making table header toggleable through js script and collapse toggle class -->
               <th data-toggle="collapse" data-target="#content" class="accordion-toggle"><?php echo "Customer ", $users[$x]['first_name']; ?>  </th>
-              <th class="time_submit"> Last interacted on </th>
+              <th class="time_submit"> Last interacted on 
+                <?php
+                  $id = $users[$x]['user_id'];
+                  $sql_query = "SELECT time_ref FROM  user_messages WHERE user_refid='$id' ";
+                  $last_seen = mysqli_query($connect,$sql_query);  
+                  //  Checking if there are any messages submitted from the users, alternatively show a blank date.
+                  if(mysqli_num_rows($last_seen)>0){
+                    $date = $last_seen->fetch_assoc();  
+                    echo $date['time_ref'];
+                  }
+                  else{
+                    echo ''; 
+                  }
+               ?>
+              </th>
               </br>
               <tr>
                 <td class="table">
@@ -129,29 +144,26 @@
                     <table class="accordian-body collapse" id="content">
                       <tr>
                         <td class="user_detail">
-                          <ul >
+                          <ul style="list-style-type: none;">
                             <!-- Generating the user info that was retrieved with the above mysqli fetch and 
                           array initialization of 'users' table content from MySQL database. -->
-                            <?php 
-                                echo 'Name: ', $users[$x]['first_name'] , "</br>";
-                                echo "Last Name: " ,  $users[$x]['last_name'], "</br>"; 
-                                echo "email: ",  $users[$x]['email'];
-                              ?>
+                            <li> <?php echo 'Name: ', $users[$x]['first_name']; ?> </li>
+                            <li> <?php echo "Last Name: " , $users[$x]['last_name']; ?> <li>
+                            <li> <?php echo "email: ", $users[$x]['email']; ?> </li>
                           </ul>
                         </td>
-                        <!-- Use of BS3 nav-pills class to add functionality to the user management board -->
-                        <td class="admin_func">
-                          <ul class="nav nav-pills" role="tablist">
-                            <li class="nav-item">
-                              <a class="nav-link" data-toggle="pill" href="#Edit" role="tab">Edit</a>
-                            </li>
-                            <li class="nav-item">
-                              <a class="nav-link" id="customers" data-toggle="pill" href="#Del" role="tab" >Delete</a>
-                            </li>
-                            <li class="nav-item">
-                              <a class="nav-link" data-toggle="pill" href="#Show" role="tab">Show Messages</a>
-                            </li>
-                          </ul>
+                        <!-- Link with redirect to edit user page for admin edit of user details -->
+                        <td>
+                          <a href="edit-user.php?id= <?= $users[$x]['user_id']?>" class="btn btn-info"> Edit User </a>
+                        </td>
+                        <td>
+                          <form id="delete_user" method="post" class="form-group">
+                            <!-- <button name="del_user" class="btn btn-danger" type="submit" onclick=user_del() value= > Delete User</button> -->
+                            <button class="btn btn-danger" onclick=user_del() name="del_user" type="submit">Delete User </button>
+                          </form>
+                        </td>
+                        <td>
+                          <button class="btn btn-success"> Display Messages</button>
                         </td>
                       </tr>
                     </table>
@@ -160,15 +172,29 @@
               </tr>
             </table>
             <?php
+              
+              if (isset($_POST["del_user"])){
+                $del_id=mysqli_escape_string($connect, $users[$x]['user_id']);
+                $del_query = "DELETE FROM users WHERE user_id='$del_id' ";
+                $deletion =mysqli_query($connect,$del_query);
+                if ($deletion){
+                  echo '<script> alert("The user has been deleted successfully!!") </script>';
+                }
+                // Resetting the $_POST var that signifies that the admin selected to delete a user.
+                $_POST["del_user"]=null;
+              }
+              // IF ISNULL END POINT.
+                }
+              // FOR EACH END POINT.
               }
             ?>
           </div>
         </div>
         <div class="tab-pane container fade" id="Messages" >
           <?php
-            $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
+            // $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
             // $message = mysqli_real_escape_string($connect,$_POST["message"]);
-            $query = "SELECT content FROM  user_messages ";
+            $query = "SELECT content FROM  user_messages WHERE user_refid='' ";
             // Storing the MySQL query to a variable for depiction of user submitted messages.
             $q_result = mysqli_query($connect,$query);
             if (mysqli_num_rows($q_result) > 0)
@@ -208,22 +234,34 @@
 }
 </script>
 
-<!-- JS script to promp user, in order to confirm logout -->
+<!-- JS function  to prompt user, in order to confirm logout -->
 <script>
-function logout() {
-  const response = confirm("Are you sure you want to do logout?");
-  if (response) {
-    window.location.href='logoutA.php';
-  }  
-}
+  function logout() {
+    const response = confirm("Are you sure you want to logout?");
+    if (response) {
+      window.location.href='logoutA.php';
+    }  
+  }
 </script>
 
-<!-- JS Handler for collapse functionality of user management board -->
+<!-- JS function  to prompt admin, whether to delete user or not. -->
+<script>
+  function user_del() {
+    const reply = confirm("Deleting selected user.Are you sure ?");
+    if (reply){
+      <?php
+        $_POST["del_user"]=true;
+      ?>
+    }  
+  }
+</script>
+
+<!-- JQuery Handler for collapse functionality of user management board -->
 <script>
   $('.accordian-body').on('show.bs.collapse', function () {
     $(this).closest("table")
         .find(".collapse.in")
         .not(this)
         //.collapse('toggle')
-})
+  })
 </script>
