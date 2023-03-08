@@ -2,7 +2,8 @@
   session_start();  
   // Setting the php.ini file to the correct timezone without altering the configuration file activele.
   date_default_timezone_set('Europe/Athens');
-  if(!isset($_SESSION["email"])) 
+  // Checking if the user is already logged in, thus avoiding to login a 2nd time.
+  if(!isset($_SESSION["email"]) || ($_SESSION['user']===false) ) 
   {  
     session_destroy();
     header("location:login_page.php");  
@@ -50,11 +51,12 @@
             <label>Last Name</label>  
             <input type="text" name="last_name" class="form-control" />  
             <br />
-            <label>Email: <?php echo "<b> $_SESSION[email] </b> "; ?> </label>
-				    <br />
             <label>Password</label>  
             <input type="password" name="password" class="form-control" />  
             <br />
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" />  
+				    <br />
               <input  type="submit" name="update" value="Update" class=" update btn btn-info" />  
             <br /> 
           </form>
@@ -65,7 +67,7 @@
               $ucl = preg_match('/[a-zA-Z]/', $_POST["password"]); // Uppercase Letter
               $dig = preg_match('/\d/', $_POST["password"]); // Numeral
               $nos = preg_match('/[^a-zA-Z\d]/', $_POST["password"]); // Non-alpha/num characters
-              if(empty($_POST["password"]) || empty($_POST["first_name"]) || empty($_POST["last_name"]) )  
+              if(empty($_POST["email"]) || empty($_POST["password"]) || empty($_POST["first_name"]) || empty($_POST["last_name"]) )  
               {  
                     echo '<script>alert("All Fields are required")</script>';  
               }  
@@ -82,9 +84,9 @@
                 $firstname = mysqli_real_escape_string($connect, $_POST["first_name"]);  
                 $lastname = mysqli_real_escape_string($connect, $_POST["last_name"]);  
                 $password = mysqli_real_escape_string($connect, $_POST["password"]); 
-                // $email = mysqli_real_escape_string($connect, $_POST["email"]);
+                $email = mysqli_real_escape_string($connect, $_POST["email"]);
                 $password = md5($password);  
-                $query = "UPDATE  users  SET first_name='$firstname', last_name='$lastname', password='$password' WHERE email = '$_SESSION[email]' ";  
+                $query = "UPDATE  users  SET first_name='$firstname', last_name='$lastname', password='$password', email='$email' WHERE email = '$_SESSION[email]' ";  
                 if(mysqli_query($connect, $query))  
                 {  
                     echo '<script> alert("Changes were made succesfully!!") </script>';
@@ -126,10 +128,11 @@
         </div>
         <div class="tab-pane container fade" id="Messages" >
           <?php
+            $uid= $_SESSION["uid"];
             $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
             // $message = mysqli_real_escape_string($connect,$_POST["message"]);
-            $msg_content = "SELECT content FROM  user_messages WHERE user_refid = '$_SESSION[uid]' ";
-            $time_stamp = "SELECT time_ref FROM  user_messages WHERE user_refid = '$_SESSION[uid]' ";
+            $msg_content = "SELECT content FROM  user_messages WHERE user_refid = '$uid' ";
+            $time_stamp = "SELECT time_ref FROM  user_messages WHERE user_refid = '$uid' ";
             // Storing the MySQL query to a variable for depiction of user submitted messages.
             $msg_result = mysqli_query($connect,$msg_content);
             $time_result = mysqli_query($connect,$time_stamp);
@@ -190,7 +193,7 @@
 <!-- JS script to promp user, in order to confirm logout -->
 <script>
 function logout() {
-  const response = confirm("Are you sure you want to do logout?");
+  const response = confirm("Are you sure you want to logout?");
   if (response) {
     window.location.href='logout.php';
   }  
