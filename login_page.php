@@ -4,7 +4,7 @@ session_start();
 $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
  
 // Check if the user is already logged in, if yes then redirect him to user dash page
-if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
+if(isset($_SESSION["email"]) && $_SESSION["user"] === true){
     header("location: user_dash.php");
     exit();
 }
@@ -49,8 +49,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
             $_SESSION["email"] = $email; 
             // echo $_SESSION["email"];
             $row = $result->fetch_assoc();           
-            $_SESSION['uid'] = $row["user_id"]; 
-
+            $_SESSION["uid"] = $row["user_id"]; 
+            $_SESSION["user"] = true;
             // Redirect user to dashboard page
             header("location: user_dash.php");
             exit();
@@ -75,13 +75,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
     <meta http-equiv="X-UA-Compatible" content="IE=opera">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>User Login</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.3.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script> 
     <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
     <br/> 
+    <!-- Message output of successful registration as alert with BS 5.0.2 and Jquery dismiss handler. -->
+    <?php include ("message.php"); ?>
     <div class="redirect">
         <input type="button" class="btn btn-primary" onclick="window.location.href='admin_login.php';" value="Admin Login">  
     </div>
