@@ -8,7 +8,6 @@
     header("location:admin_login.php");  
     exit();
   }   
-  
 ?>
 
 <!DOCTYPE html>
@@ -32,13 +31,13 @@
     <div class="admin container">
       <ul class="nav nav-pills" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" data-toggle="pill" href="#Prof" role="tab">My Profile</a>
+          <a id="pill" class="nav-link active" data-toggle="pill" href="#Prof" role="tab">My Profile</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" id="customers" data-toggle="pill" href="#Customers" role="tab">My Customers</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" data-toggle="pill" href="#Messages" role="tab">Message Board</a>
+          <a id="pill" class="nav-link" data-toggle="pill" href="#Messages" role="tab">Message Board</a>
         </li>
       </ul>
       <br/> <br/>
@@ -125,12 +124,13 @@
               <th class="time_submit"> Last interacted on 
                 <?php
                   $id = $users[$x]['user_id'];
-                  $sql_query = "SELECT time_ref FROM  user_messages WHERE user_refid='$id' ";
+                  $sql_query = "SELECT max(time_ref) FROM  user_messages WHERE user_refid='$id' ";
                   $last_seen = mysqli_query($connect,$sql_query);  
-                  //  Checking if there are any messages submitted from the users, alternatively show a blank date.
-                  if(mysqli_num_rows($last_seen)>0){
+                  /*  Checking if there are any messages submitted from the users,showing the most recent interaction 
+                  through the contact form. Alternatively, show a blank date. */
+                  if($last_seen){
                     $date = $last_seen->fetch_assoc();  
-                    echo $date['time_ref'];
+                    echo $date["max(time_ref)"];
                   }
                   else{
                     echo ''; 
@@ -156,14 +156,11 @@
                         <td>
                           <a href="edit-user.php?id= <?= $users[$x]['user_id']?>" class="btn btn-info"> Edit User </a>
                         </td>
-                        <td>
-                          <form id="delete_user" method="post" class="form-group">
-                            <!-- <button name="del_user" class="btn btn-danger" type="submit" onclick=user_del() value= > Delete User</button> -->
-                            <button class="btn btn-danger" onclick=user_del() name="del_user" type="submit">Delete User </button>
-                          </form>
+                        <td>             
+                          <a id="del_user" class="btn btn-danger" onclick=del_prompt(<?= $users[$x]['user_id']?>)  href="#"> Delete User </a>
                         </td>
                         <td>
-                          <button class="btn btn-success"> Display Messages</button>
+                          <a href="admin_dash.php?id=<?= $users[$x]['user_id']?>" onclick=active() class="btn btn-success"> Display Messages</button>
                         </td>
                       </tr>
                     </table>
@@ -171,45 +168,54 @@
                 </td>
               </tr>
             </table>
-            <?php
-              
-              if (isset($_POST["del_user"])){
-                $del_id=mysqli_escape_string($connect, $users[$x]['user_id']);
-                $del_query = "DELETE FROM users WHERE user_id='$del_id' ";
-                $deletion =mysqli_query($connect,$del_query);
-                if ($deletion){
-                  echo '<script> alert("The user has been deleted successfully!!") </script>';
-                }
-                // Resetting the $_POST var that signifies that the admin selected to delete a user.
-                $_POST["del_user"]=null;
-              }
+          <?php 
               // IF ISNULL END POINT.
-                }
-              // FOR EACH END POINT.
               }
-            ?>
+            // FOR EACH END POINT.
+            }
+          ?>
           </div>
         </div>
         <div class="tab-pane container fade" id="Messages" >
           <?php
-            // $connect = mysqli_connect("127.0.0.1", "root", "", "login_app");  
-            // $message = mysqli_real_escape_string($connect,$_POST["message"]);
-            $query = "SELECT content FROM  user_messages WHERE user_refid='' ";
+          /* Testing if admin has selected a user to display messages. If not show message below to
+          direct admin to select a user. */
+            if(!isset($_GET["id"])){
+              echo '<h4> You have not selected a user through the "My Customers" section. </h4> </br>';
+              $user_refid=0;
+            }
+            else{
+              $user_refid = $_GET["id"];
+            }
+            $query = "SELECT * FROM  user_messages WHERE user_refid='$user_refid'";
+            $user_name = "SELECT * FROM  users WHERE user_id = '$user_refid' ";
             // Storing the MySQL query to a variable for depiction of user submitted messages.
             $q_result = mysqli_query($connect,$query);
+            $details = mysqli_query($connect,$user_name);
             if (mysqli_num_rows($q_result) > 0)
             {  
+              $details = $details->fetch_assoc();
               $msg_id = 1;
-              while($content = $q_result->fetch_assoc())
-              {
+              foreach($q_result as $content)
+              {     
                 
           ?>
 
-          <table class="table">
+          <table class="msg table">
             <th> Message <?php echo $msg_id; ?> </th>
+            <th class="admin messages"> Submitted on <?php echo $content["time_ref"]; ?> </th>
             <tr>
-                  <td> <?php echo $content['content']; ?> </td>
-                  <br/>
+              <td class="user_detail">
+                <ul style="list-style-type: none;">
+                  <!-- Generating the user info that was retrieved with the above mysqli fetch and 
+                array initialization of 'users' table content from MySQL database. -->
+                  <li> <?php echo 'Name: ', $details['first_name']; ?> </li>
+                  <li> <?php echo "Last Name: " , $details['last_name']; ?> <li>
+                  <li> <?php echo "email: ", $details['email']; ?> </li>
+                </ul>
+              </td>
+              <td> Message: <?php echo $content['content']; ?> </td>
+              <br/>
             </tr>
           </table>
           <?php
@@ -244,15 +250,30 @@
   }
 </script>
 
-<!-- JS function  to prompt admin, whether to delete user or not. -->
+<!-- JS function  to prompt admin, in order to confirm deletion of selected user -->
 <script>
-  function user_del() {
-    const reply = confirm("Deleting selected user.Are you sure ?");
-    if (reply){
-      <?php
-        $_POST["del_user"]=true;
-      ?>
+  function del_prompt(id) {
+    const agrees = confirm("Are you sure?");
+    if (agrees) {
+      var url = "delete.php?id= ";
+      url = url.concat(id);
+      // Replace href="#" with the page redirect with selected user's id as the $_GET variable.
+      // var link=document.getElementById("del_user");
+      // link.setAttribute("href",url);
+      window.location.href=url;
     }  
+  }
+</script>
+
+ <!-- JS Script to enable nav-pill "Messages" when admin select "Display Messages function in "My Customers"
+     section of admin dashboard.  -->
+<script>
+  function active(){
+    // let element = document.getElementById("Messages").classList;
+    // document.getElementById("msg pill").classList.add("active");
+    // document.getElementById("cust pill").classList.remove("active");
+    // element.add("active")
+    alert("Choose the \"Message Board \" section to see the selected user's messages.");
   }
 </script>
 
