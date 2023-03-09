@@ -3,7 +3,7 @@
   // Setting the php.ini file to the correct timezone without altering the configuration file activele.
   date_default_timezone_set('Europe/Athens');
   // Checking if the user is already logged in, thus avoiding to login a 2nd time.
-  if(!isset($_SESSION["email"]) || ($_SESSION['user']===false) ) 
+  if(!isset($_SESSION["email"]) || !isset($_SESSION['user'] ) )
   {  
     session_destroy();
     header("location:login_page.php");  
@@ -139,7 +139,8 @@
             if (mysqli_num_rows($msg_result) > 0)
             {  
               $msg_id = 1;
-              while($content = $msg_result->fetch_assoc())
+              // while($content = $msg_result->fetch_assoc())
+              foreach($msg_result as $content)
               {
                 $submit_time = $time_result->fetch_assoc();
           ?>
@@ -176,7 +177,6 @@
 }
 </script>
 <!-- JS Script to handle message toggles for user message history function -->
-
 <script>
  function table_show() {
   var x = document.getElementById("toggle");
@@ -190,7 +190,7 @@
 }
 </script>
 
-<!-- JS script to promp user, in order to confirm logout -->
+<!-- JS script to prompt user, in order to confirm logout -->
 <script>
 function logout() {
   const response = confirm("Are you sure you want to logout?");
