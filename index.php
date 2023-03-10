@@ -57,21 +57,24 @@
           $lastname = mysqli_real_escape_string($connect, $_POST["last_name"]);  
           $password = mysqli_real_escape_string($connect, $_POST["password"]); 
 	     $email = mysqli_real_escape_string($connect, $_POST["email"]);
-		/* // 2 way Encryption process via openssl_encrypt for user id creation
-		   $cipher = "aes-256-cbc";
-		   $ivlen = openssl_cipher_iv_length($cipher);
-		   $iv = openssl_random_pseudo_bytes($ivlen);
-		   $userid = openssl_encrypt($email,$cipher,$password , 0, $iv);
-		  //$decrypt_userid = openssl_decrypt($email, $cipher, $password, 0, $iv);
-		//End of 2 way encryption  */
           $password = md5($password);  
           $query = "INSERT INTO users (first_name, last_name, password, email) VALUES('$firstname', '$lastname', '$password', '$email')";  
-          if(mysqli_query($connect, $query))  
-          {  
-               echo '<script> alert("Registration Done!!") </script>';
-               echo "<script>setTimeout(\"location.href = 'login_page.php';\",500);</script>";
-          }  
+          $duplicate = "SELECT email FROM users where email='$email' ";
+          $is_duplicate = mysqli_query($connect,$duplicate);
+          // Checking if email being submitted has already been created by another user. Notify new user to change email on register page.
+          if(mysqli_num_rows($is_duplicate)>0){
+               echo '<script>alert("There is already a user with that email!! Please use a different email address.")</script>';
+          }else
+          {
+               if(mysqli_query($connect, $query)){  
+                    // echo '<script> alert("Registration Done!!") </script>';
+                    // echo "<script>setTimeout(\"location.href = 'login_page.php';\",500);</script>";
+                    $_SESSION["message"]="Registration Done!!!";
+                    echo "<script>setTimeout(\"location.href = 'login_page.php';\",250);</script>";
+               }
+          } 
      }  
+     mysqli_close($connect);
  } 
  ?> 
  
